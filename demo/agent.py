@@ -88,7 +88,10 @@ class DemoAgent:
         self.postgres = DEFAULT_POSTGRES if postgres is None else postgres
         self.extra_args = extra_args
 
-        self.endpoint = f"http://{self.external_host}:{http_port}"
+        if RUN_MODE == 'pwd':
+            self.endpoint = f"http://{self.external_host}"
+        else:
+            self.endpoint = f"http://{self.external_host}:{http_port}"
         self.admin_url = f"http://{self.internal_host}:{admin_port}"
         self.webhook_port = None
         self.webhook_url = None
@@ -299,7 +302,10 @@ class DemoAgent:
 
     async def listen_webhooks(self, webhook_port):
         self.webhook_port = webhook_port
-        self.webhook_url = f"http://{self.external_host}:{str(webhook_port)}/webhooks"
+        if RUN_MODE == "pwd":
+            self.webhook_url = f"http://localhost:{str(webhook_port)}/webhooks"
+        else:
+            self.webhook_url = f"http://{self.external_host}:{str(webhook_port)}/webhooks"
         app = web.Application()
         app.add_routes([web.post("/webhooks/topic/{topic}/", self._receive_webhook)])
         runner = web.AppRunner(app)
