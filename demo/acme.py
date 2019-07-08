@@ -52,7 +52,12 @@ class AcmeAgent(DemoAgent):
 
         if state == "request_received":
             # TODO handle received credential requests
-            pass
+            # TODO issue credentials based on the credential_definition_id
+            cred_attrs = self.cred_attrs[message["credential_definition_id"]]
+            await self.admin_POST(
+                f"/credential_exchange/{credential_exchange_id}/issue",
+                {"credential_values": cred_attrs},
+            )
 
     async def handle_presentations(self, message):
         state = message["state"]
@@ -67,6 +72,23 @@ class AcmeAgent(DemoAgent):
 
         if state == "presentation_received":
             # TODO handle received presentations
+
+            # TODO if presentation is a degree schema (proof of education), also ask for proof of student id
+            if X:
+                proof_attrs = [
+                    {"name": "name", "restrictions": [{"schema_name": ""}, {}]},
+                    {"name": "date", "restrictions": [{"schema_name": ""}, {}]},
+                    {"name": "degree", "restrictions": [{"schema_name": ""}, {}]},
+                ]
+                proof_predicates = []
+                proof_request = {
+                }
+                await agent.admin_POST(
+                    "/presentation_exchange/send_request", proof_request
+                )
+
+            # TODO if proof of student if, then validate
+
             pass
 
     async def handle_basicmessages(self, message):
@@ -106,25 +128,24 @@ async def main():
                 )
             )
             # TODO define schema
-            #schema_body = {
-            #}
-            #schema_response = await agent.admin_POST("/schemas", schema_body)
-        # log_json(json.dumps(schema_response), label="Schema:")
-        #schema_id = schema_response["schema_id"]
-        #log_msg("Schema ID:", schema_id)
+            (schema_id, credential_definition_id) = await agent.register_schema_and_creddef(
+                "employee id schema", version, ["employee_id", "name", "date", "position"]
+                )
 
-        # Create a cred def for the schema
-        # TODO define cred def
-        #log_status("#4 Create a new credential definition on the ledger")
-        #with log_timer("Publish credential definition duration:"):
-        #    credential_definition_body = {"schema_id": schema_id}
-        #    credential_definition_response = await agent.admin_POST(
-        #        "/credential-definitions", credential_definition_body
-        #    )
-        #credential_definition_id = credential_definition_response[
-        #    "credential_definition_id"
-        #]
-        #log_msg("Cred def ID:", credential_definition_id)
+        log_status("#3 Create a new schema on the ledger")
+        with log_timer("Publish schema duration:"):
+            version_2 = format(
+                "%d.%d.%d"
+                % (
+                    random.randint(1, 101),
+                    random.randint(1, 101),
+                    random.randint(1, 101),
+                )
+            )
+            # TODO define schema
+            (schema_id_2, credential_definition_id_2) = await agent.register_schema_and_creddef(
+                "income schema", version_2, ["employee_id", "name", "date", "salary"]
+                )
 
         with log_timer("Generate invitation duration:"):
             # Generate an invitation
@@ -152,23 +173,46 @@ async def main():
             elif option == "1":
                 log_status("#13 Issue credential offer to X")
                 # TODO credential offers
-                #offer = {
-                #    "credential_definition_id": credential_definition_id,
-                #    "connection_id": agent.connection_id,
-                #}
-                #await agent.admin_POST("/credential_exchange/send-offer", offer)
+                offer = {
+                    "credential_definition_id": credential_definition_id,
+                    "connection_id": agent.connection_id,
+                }
+                agent.cred_attrs[credential_definition_id] = {
+                    "employee_id": "ACME0009",
+                    "name": "Alice Smith",
+                    "date": "2019-06-30",
+                    "position": "CEO",
+                }
+                await agent.admin_POST("/credential_exchange/send-offer", offer)
+
+                log_status("#13 Issue credential offer 2 to X")
+                # TODO credential offers
+                offer_2 = {
+                    "credential_definition_id": credential_definition_id_2,
+                    "connection_id": agent.connection_id,
+                }
+                agent.cred_attrs[credential_definition_id_2] = {
+                    "employee_id": "ACME0009",
+                    "name": "Alice Smith",
+                    "date": "2019-06-30",
+                    "salary": "120000",
+                }
+                await agent.admin_POST("/credential_exchange/send-offer", offer_2)
 
             elif option == "2":
                 log_status("#20 Request proof of degree from alice")
                 # TODO presentation requests
-                #proof_attrs = [
-                #]
-                #proof_predicates = []
-                #proof_request = {
-                #}
-                #await agent.admin_POST(
-                #    "/presentation_exchange/send_request", proof_request
-                #)
+                proof_attrs = [
+                    {"name": "name", "restrictions": [{"schema_name": ""}]},
+                    {"name": "date", "restrictions": [{"schema_name": ""}]},
+                    {"name": "degree", "restrictions": [{"schema_name": ""}]},
+                ]
+                proof_predicates = []
+                proof_request = {
+                }
+                await agent.admin_POST(
+                    "/presentation_exchange/send_request", proof_request
+                )
 
             elif option == "3":
                 msg = await prompt("Enter message: ")

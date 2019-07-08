@@ -21,6 +21,8 @@ class FaberAgent(DemoAgent):
         self.connection_id = None
         self._connection_active = asyncio.Future()
         self.cred_state = {}
+        # TODO define a dict to hold credential attributes based on credential_definition_id
+        self.cred_attrs = {}
 
     async def detect_connection(self):
         await self._connection_active
@@ -52,12 +54,8 @@ class FaberAgent(DemoAgent):
 
         if state == "request_received":
             log_status("#17 Issue credential to X")
-            cred_attrs = {
-                "name": "Alice Smith",
-                "date": "2018-05-28",
-                "degree": "Maths",
-                "age": "24",
-            }
+            # TODO issue credentials based on the credential_definition_id
+            cred_attrs = self.cred_attrs[message["credential_definition_id"]]
             await self.admin_POST(
                 f"/credential_exchange/{credential_exchange_id}/issue",
                 {"credential_values": cred_attrs},
@@ -118,11 +116,26 @@ async def main():
                     random.randint(1, 101),
                 )
             )
+            # TODO add a student_id claim to the transcript
             (schema_id, credential_definition_id) = await agent.register_schema_and_creddef(
-                "degree schema", version, ["name", "date", "degree", "age"]
+                "degree schema", version, ["student_id", "name", "date", "degree", "age"]
                 )
 
         # TODO add an additional credential for Student ID
+        with log_timer("Publish schema/cred def duration:"):
+            log_status("#3/4 Create a new schema/cred def on the ledger")
+            version_2 = format(
+                "%d.%d.%d"
+                % (
+                    random.randint(1, 101),
+                    random.randint(1, 101),
+                    random.randint(1, 101),
+                )
+            )
+            # TODO add a student_id claim to the transcript
+            (schema_id_2, credential_definition_id_2) = await agent.register_schema_and_creddef(
+                "student id schema", version_2, ["student_id", "name", "program", "effecive_date"]
+                )
 
         with log_timer("Generate invitation duration:"):
             # Generate an invitation
@@ -153,9 +166,29 @@ async def main():
                     "credential_definition_id": credential_definition_id,
                     "connection_id": agent.connection_id,
                 }
+                # TODO define attributes to send for credential
+                agent.cred_attrs[credential_definition_id] = {
+                    "student_id": "AS1234567",
+                    "name": "Alice Smith",
+                    "date": "2018-05-28",
+                    "degree": "Maths",
+                    "age": "24",
+                }
                 await agent.admin_POST("/credential_exchange/send-offer", offer)
 
                 # TODO issue an additional credential for Student ID
+                log_status("#13 Issue credential offer 2 to X")
+                offer_2 = {
+                    "credential_definition_id": credential_definition_id_2,
+                    "connection_id": agent.connection_id,
+                }
+                agent.cred_attrs[credential_definition_id_2] = {
+                    "student_id": "AS1234567",
+                    "name": "Alice Smith",
+                    "program": "Engineering", 
+                    "effecive_date": "2014-09-04",
+                }
+                await agent.admin_POST("/credential_exchange/send-offer", offer_2)
 
             elif option == "2":
                 log_status("#20 Request proof of degree from alice")
