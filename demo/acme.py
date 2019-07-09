@@ -72,8 +72,10 @@ class AcmeAgent(DemoAgent):
 
         if state == "presentation_received":
             # TODO handle received presentations
+            print("Proof:", message)
 
             # TODO if presentation is a degree schema (proof of education), also ask for proof of student id
+            X = False
             if X:
                 proof_attrs = [
                     {"name": "name", "restrictions": [{"schema_name": ""}, {}]},
@@ -203,12 +205,17 @@ async def main():
                 log_status("#20 Request proof of degree from alice")
                 # TODO presentation requests
                 proof_attrs = [
-                    {"name": "name", "restrictions": [{"schema_name": ""}]},
-                    {"name": "date", "restrictions": [{"schema_name": ""}]},
-                    {"name": "degree", "restrictions": [{"schema_name": ""}]},
+                    {"name": "student_id", "restrictions": [{"schema_name": "degree schema"}, {"attr::name::value": {"$eq": "Alice Smith"}}]},
+                    {"name": "date", "restrictions": [{"schema_name": "degree schema"}, {"attr::name::value": {"$eq": "Alice Smith"}}]},
+                    {"name": "degree", "restrictions": [{"schema_name": "degree schema"}, {"attr::name::value": {"$eq": "Alice Smith"}}]},
                 ]
                 proof_predicates = []
                 proof_request = {
+                    "name": "Proof of Education",
+                    "version": "1.0",
+                    "connection_id": agent.connection_id,
+                    "requested_attributes": proof_attrs,
+                    "requested_predicates": proof_predicates,
                 }
                 await agent.admin_POST(
                     "/presentation_exchange/send_request", proof_request
