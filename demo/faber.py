@@ -134,7 +134,7 @@ async def main():
             )
             # TODO add a student_id claim to the transcript
             (schema_id_2, credential_definition_id_2) = await agent.register_schema_and_creddef(
-                "student id schema", version_2, ["student_id", "name", "program", "effecive_date"]
+                "student id schema", version_2, ["student_id", "name", "program", "effective_date"]
                 )
 
         with log_timer("Generate invitation duration:"):
@@ -186,7 +186,7 @@ async def main():
                     "student_id": "AS1234567",
                     "name": "Alice Smith",
                     "program": "Engineering", 
-                    "effecive_date": "2014-09-04",
+                    "effective_date": "2014-09-04",
                 }
                 await agent.admin_POST("/credential_exchange/send-offer", offer_2)
 
