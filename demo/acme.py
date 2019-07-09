@@ -21,6 +21,8 @@ class AcmeAgent(DemoAgent):
         self.connection_id = None
         self._connection_active = asyncio.Future()
         self.cred_state = {}
+        # TODO define a dict to hold credential attributes based on credential_definition_id
+        self.cred_attrs = {}
 
     async def detect_connection(self):
         await self._connection_active
@@ -72,24 +74,41 @@ class AcmeAgent(DemoAgent):
 
         if state == "presentation_received":
             # TODO handle received presentations
-            print("Proof:", message)
+
+            # TODO if proof of student id, then validate
+            log_status("#27 Process the proof provided by X")
+            log_status("#28 Check if proof is valid")
+            proof = await self.admin_POST(
+                f"/presentation_exchange/{presentation_exchange_id}/verify_presentation"
+            )
+            self.log("Proof =", proof["verified"])
 
             # TODO if presentation is a degree schema (proof of education), also ask for proof of student id
-            X = False
-            if X:
+            is_proof_of_education = (message['presentation_request']['name'] == 'Proof of Education')
+            if is_proof_of_education:
+                log_status("#28.1 Received proof of education, now check for proof of student id")
+                requested_student_id = None
+                for attr, value in message['presentation_request']['requested_attribtues'].items():
+                    if value['name'] == 'student_id':
+                        requested_student_id = message['presentation']['requested_proof'][attr]['raw']
                 proof_attrs = [
-                    {"name": "name", "restrictions": [{"schema_name": ""}, {}]},
-                    {"name": "date", "restrictions": [{"schema_name": ""}, {}]},
-                    {"name": "degree", "restrictions": [{"schema_name": ""}, {}]},
+                    {"name": "name", "restrictions": [{"schema_name": "student id schema", "attr::student_id::value": requested_student_id}]},
+                    {"name": "date", "restrictions": [{"schema_name": "student id schema", "attr::student_id::value": requested_student_id}]},
+                    {"name": "degree", "restrictions": [{"schema_name": "student id schema", "attr::student_id::value": requested_student_id}]},
                 ]
                 proof_predicates = []
                 proof_request = {
+                    "name": "Proof of Student ID",
+                    "version": "1.0",
+                    "connection_id": self.connection_id,
+                    "requested_attributes": proof_attrs,
+                    "requested_predicates": proof_predicates,
                 }
                 await agent.admin_POST(
                     "/presentation_exchange/send_request", proof_request
                 )
-
-            # TODO if proof of student if, then validate
+            else:
+                log_status("#28.1 Received ", message['presentation_request']['name'])
 
             pass
 
@@ -205,9 +224,9 @@ async def main():
                 log_status("#20 Request proof of degree from alice")
                 # TODO presentation requests
                 proof_attrs = [
-                    {"name": "student_id", "restrictions": [{"schema_name": "degree schema"}, {"attr::name::value": {"$eq": "Alice Smith"}}]},
-                    {"name": "date", "restrictions": [{"schema_name": "degree schema"}, {"attr::name::value": {"$eq": "Alice Smith"}}]},
-                    {"name": "degree", "restrictions": [{"schema_name": "degree schema"}, {"attr::name::value": {"$eq": "Alice Smith"}}]},
+                    {"name": "student_id", "restrictions": [{"schema_name": "degree schema", "attr::name::value": "Alice Smith"}]},
+                    {"name": "date", "restrictions": [{"schema_name": "degree schema", "attr::name::value": "Alice Smith"}]},
+                    {"name": "degree", "restrictions": [{"schema_name": "degree schema", "attr::name::value": "Alice Smith"}]},
                 ]
                 proof_predicates = []
                 proof_request = {
