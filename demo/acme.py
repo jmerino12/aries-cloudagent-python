@@ -78,6 +78,7 @@ class AcmeAgent(DemoAgent):
             # TODO if proof of student id, then validate
             log_status("#27 Process the proof provided by X")
             log_status("#28 Check if proof is valid")
+            self.log("Presentation received:", json.dumps(message))
             proof = await self.admin_POST(
                 f"/presentation_exchange/{presentation_exchange_id}/verify_presentation"
             )

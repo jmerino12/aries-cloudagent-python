@@ -84,6 +84,7 @@ class AliceAgent(DemoAgent):
             log_status(
                 "#24 Query for credentials in the wallet that satisfy the proof request"
             )
+            self.log("Received proof request:", json.dumps(message))
 
             # include self-attested attributes (not included in credentials)
             revealed = {}
@@ -126,6 +127,7 @@ class AliceAgent(DemoAgent):
                 "requested_attributes": revealed,
                 "self_attested_attributes": self_attested,
             }
+            self.log("Sending proof:", json.dumps(proof))
 
             log_status("#26 Send the proof to X")
             await self.admin_POST(
