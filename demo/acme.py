@@ -78,11 +78,11 @@ class AcmeAgent(DemoAgent):
             # TODO if proof of student id, then validate
             log_status("#27 Process the proof provided by X")
             log_status("#28 Check if proof is valid")
-            #self.log("Presentation received:", json.dumps(message))
+            self.log("Presentation received:", json.dumps(message))
             proof = await self.admin_POST(
                 f"/presentation_exchange/{presentation_exchange_id}/verify_presentation"
             )
-            #self.log("Proof =", proof["verified"])
+            self.log("Proof =", proof["verified"])
 
             # TODO if presentation is a degree schema (proof of education), also ask for proof of student id
             is_proof_of_education = (message['presentation_request']['name'] == 'Proof of Education')
@@ -93,6 +93,7 @@ class AcmeAgent(DemoAgent):
                     if value['name'] == 'student_id':
                         requested_student_id = message['presentation']['requested_proof']['revealed_attrs'][attr]['raw']
                 proof_attrs = [
+                    {"name": "student_id", "restrictions": [{"schema_name": "student id schema"}]},
                     {"name": "name", "restrictions": [{"schema_name": "student id schema"}]}, #, "attr::student_id::value": requested_student_id}]},
                     {"name": "program", "restrictions": [{"schema_name": "student id schema"}]}, #, "attr::student_id::value": requested_student_id}]},
                     {"name": "effective_date", "restrictions": [{"schema_name": "student id schema"}]}, #, "attr::student_id::value": requested_student_id}]},
@@ -225,7 +226,8 @@ async def main():
                 log_status("#20 Request proof of degree from alice")
                 # TODO presentation requests
                 proof_attrs = [
-                    {"name": "student_id", "restrictions": [{"schema_name": "degree schema"}]}, #, "attr::name::value": "Alice Smith"}]},
+                    {"name": "name", "restrictions": [{"schema_name": "degree schema"}]},
+                    {"name": "student_id", "restrictions": [{"schema_name": "degree schema", "attr::name::value": "Alice Smith"}]},
                     {"name": "date", "restrictions": [{"schema_name": "degree schema"}]}, #, "attr::name::value": "Alice Smith"}]},
                     {"name": "degree", "restrictions": [{"schema_name": "degree schema"}]}, #, "attr::name::value": "Alice Smith"}]},
                 ]
@@ -237,6 +239,7 @@ async def main():
                     "requested_attributes": proof_attrs,
                     "requested_predicates": proof_predicates,
                 }
+                agent.log("Proof request:", json.dumps(proof_request))
                 await agent.admin_POST(
                     "/presentation_exchange/send_request", proof_request
                 )
