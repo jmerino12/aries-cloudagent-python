@@ -182,7 +182,32 @@ class FaberAgent(BaseAgent):
         schema_body = {
             "schema_name": "degree schema",
             "schema_version": version,
-            "attributes": ["name", "date", "degree", "age"],
+            "attributes": [
+                "name",
+                "date",
+                "degree",
+                "age",
+                "attr1",
+                "attr2",
+                "attr3",
+                "attr4",
+                "attr5",
+                "attr6",
+                "attr7",
+                "attr8",
+                "attr9",
+                "attr10",
+                "attr11",
+                "attr12",
+                "attr13",
+                "attr14",
+                "attr15",
+                "attr16",
+                "attr17",
+                "attr18",
+                "attr19",
+                "attr20",
+            ],
         }
         schema_response = await self.admin_POST("/schemas", schema_body)
         self.schema_id = schema_response["schema_id"]
@@ -254,6 +279,7 @@ async def main(
     tails_server_base_url: str = None,
     issue_count: int = 300,
     wallet_type: str = None,
+    arg_file: str = None,
 ):
 
     genesis = await default_genesis_txns()
@@ -276,6 +302,7 @@ async def main(
             multitenant=multitenant,
             mediation=mediation,
             wallet_type=wallet_type,
+            arg_file=arg_file,
         )
         await alice.listen_webhooks(start_port + 2)
 
@@ -287,6 +314,7 @@ async def main(
             multitenant=multitenant,
             mediation=mediation,
             wallet_type=wallet_type,
+            arg_file=arg_file,
         )
         await faber.listen_webhooks(start_port + 5)
         await faber.register_did()
@@ -367,6 +395,26 @@ async def main(
                 "date": "2018-05-28",
                 "degree": "Maths",
                 "age": "24",
+                "attr1": "value_1",
+                "attr2": "value_2",
+                "attr3": "value_3",
+                "attr4": "value_4",
+                "attr5": "value_5",
+                "attr6": "value_6",
+                "attr7": "value_7",
+                "attr8": "value_8",
+                "attr9": "value_9",
+                "attr10": "value_10",
+                "attr11": "value_11",
+                "attr12": "value_12",
+                "attr13": "value_13",
+                "attr14": "value_14",
+                "attr15": "value_15",
+                "attr16": "value_16",
+                "attr17": "value_17",
+                "attr18": "value_18",
+                "attr19": "value_19",
+                "attr20": "value_20",
             }
             asyncio.ensure_future(
                 faber.send_credential(attributes, comment, not revocation)
@@ -470,7 +518,9 @@ async def main(
         avg = recv_timer.duration / issue_count
         item_short = "ping" if ping_only else "cred"
         item_long = "ping exchange" if ping_only else "credential"
-        faber.log(f"Average time per {item_long}: {avg:.2f}s ({1/avg:.2f}/s)")
+        faber.log(
+            f"Average time per {item_long}: {avg:.2f}s ({1/avg:.2f}/s) ({60/avg:.2f}/m)"
+        )
 
         if alice.postgres:
             await alice.collect_postgres_stats(f"{issue_count} {item_short}s")
@@ -601,6 +651,12 @@ if __name__ == "__main__":
         metavar="<wallet-type>",
         help="Set the agent wallet type",
     )
+    parser.add_argument(
+        "--arg-file",
+        type=str,
+        metavar="<arg-file>",
+        help="Specify a file containing additional aca-py parameters",
+    )
     args = parser.parse_args()
 
     if args.did_exchange and args.mediation:
@@ -631,6 +687,7 @@ if __name__ == "__main__":
                 tails_server_base_url,
                 args.count,
                 args.wallet_type,
+                args.arg_file,
             )
         )
     except KeyboardInterrupt:
