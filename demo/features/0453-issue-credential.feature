@@ -1,4 +1,34 @@
-Feature: RFC 0453 Aries agent issue credential
+Feature: RFC 0453 Aries Agent Issue Credential
+
+  @T001-RFC0453 @DIDExchangeConnection
+  Scenario Outline: Issue a credential with the Issuer beginning with an offer
+    Given "2" agents
+      | name | role   | capabilities        |
+      | Acme | issuer | <Acme_capabilities> |
+      | Bob  | holder | <Bob_capabilities>  |
+    Given "Acme" is ready to issue a "<credential_format>" credential
+    And "Acme" and "Bob" have an existing connection
+    When "Acme" offers a "<credential_format>" credential with data <Credential_data>
+    And "Bob" requests the "<credential_format>" credential
+    And "Acme" issues the "<credential_format>" credential
+    And "Bob" acknowledges the "<credential_format>" credential issue
+    Then "Bob" has the "<credential_format>" credential issued
+
+    @CredFormat_Indy @Schema_DriversLicense_v2 @DidMethod_sov
+    Examples: Indy
+      | Acme_capabilities                      | Bob_capabilities  | credential_data   | credential_format |
+      | --public-did                           |                   | Data_DL_MaxValues | indy              |
+
+    @CredFormat_JSON-LD @Schema_DriversLicense_v2 @ProofType_Ed25519Signature2018 @DidMethod_key
+    Examples: Json-LD
+      | Acme_capabilities                      | Bob_capabilities  | credential_data   | credential_format |
+      | --public-did                           |                   | Data_DL_MaxValues | json-ld           |
+
+    @CredFormat_JSON-LD @Schema_DriversLicense_v2 @ProofType_BbsBlsSignature2020 @DidMethod_key
+    Examples: Json-LD-BBS
+      | Acme_capabilities                      | Bob_capabilities  | credential_data   | credential_format |
+      | --public-did                           |                   | Data_DL_MaxValues | json-ld           |
+
 
   @T003-RFC0453 @GHA
   Scenario Outline: Issue a credential with the Issuer beginning with an offer

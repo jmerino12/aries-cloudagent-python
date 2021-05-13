@@ -19,12 +19,38 @@ from runners.agent_container import AgentContainer
 # This step is defined in another feature file
 # Given "Acme" and "Bob" have an existing connection
 
+SCHEMA_TEMPLATE = {
+    "schema_name": "test_schema.",
+    "schema_version": "1.0.0",
+    "attributes": ["attr_1","attr_2","attr_3"],
+}
 
+CRED_DEF_TEMPLATE = {
+  "support_revocation": False,
+  "schema_id": "",
+  "tag": "default"
+}
+
+CREDENTIAL_ATTR_TEMPLATE = [
+    {"name": "attr_1", "value": "value_1"},
+    {"name": "attr_2", "value": "value_2"},
+    {"name": "attr_3", "value": "value_3"}
+]
+
+
+@given('"{issuer}" is ready to issue a credential')
 @given('"{issuer}" is ready to issue a credential for {schema_name}')
-def step_impl(context, issuer, schema_name):
+def step_impl(context, issuer, schema_name=None):
     agent = context.active_agents[issuer]
 
-    schema_info = read_schema_data(schema_name)
+    if schema_name:
+        schema_info = read_schema_data(schema_name)
+    elif "schema" in context:
+        schema_info = context.schema
+    else:
+        schema_info = SCHEMA_TEMPLATE.copy()
+        schema_info["schema_name"] = schema_info["schema_name"] + issuer
+
     cred_def_id = aries_container_create_schema_cred_def(
         agent["agent"],
         schema_info["schema"]["schema_name"],
