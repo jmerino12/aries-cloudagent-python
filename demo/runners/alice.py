@@ -119,6 +119,9 @@ class AliceAgent(AriesAgent):
             self.log("cred_def_id", cred["cred_def_id"])
             self.log("schema_id", cred["schema_id"])
 
+    async def handle_issue_credential_v2_0_ld_proof(self, message):
+        self.log(f"LD Credential: message = {message}")
+
     async def handle_present_proof_v2_0(self, message):
         state = message["state"]
         pres_ex_id = message["pres_ex_id"]

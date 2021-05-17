@@ -22,6 +22,13 @@ from runners.support.agent import (  # noqa:E402
     default_genesis_txns,
     start_mediator_agent,
     connect_wallet_to_mediator,
+    CRED_FORMAT_INDY,
+    CRED_FORMAT_JSON_LD,
+    DID_METHOD_SOV,
+    DID_METHOD_KEY,
+    KEY_TYPE_ED255,
+    KEY_TYPE_BLS,
+    SIG_TYPE_BLS
 )
 from runners.support.utils import (  # noqa:E402
     log_msg,
@@ -119,6 +126,9 @@ class FaberAgent(AriesAgent):
             self.log(f"Revocation registry ID: {rev_reg_id}")
             self.log(f"Credential revocation ID: {cred_rev_id}")
 
+    async def handle_issue_credential_v2_0_ld_proof(self, message):
+        self.log(f"LD Credential: message = {message}")
+
     async def handle_issuer_cred_rev(self, message):
         pass
 
@@ -164,14 +174,22 @@ async def main(args):
             wallet_type=faber_agent.wallet_type,
         )
 
-        faber_agent.public_did = True
-        faber_schema_name = "degree schema"
-        faber_schema_attrs = ["name", "date", "degree", "age", "timestamp"]
-        await faber_agent.initialize(
-            the_agent=agent,
-            schema_name=faber_schema_name,
-            schema_attrs=faber_schema_attrs,
-        )
+        if faber_agent.cred_type == CRED_FORMAT_INDY:
+            faber_agent.public_did = True
+            faber_schema_name = "degree schema"
+            faber_schema_attrs = ["name", "date", "degree", "age", "timestamp"]
+            await faber_agent.initialize(
+                the_agent=agent,
+                schema_name=faber_schema_name,
+                schema_attrs=faber_schema_attrs,
+            )
+        elif faber_agent.cred_type == CRED_FORMAT_JSON_LD:
+            faber_agent.public_did = True
+            await faber_agent.initialize(
+                the_agent=agent
+            )
+        else:
+            raise Exception("Invalid credential type:" + faber_agent.cred_type)
 
         # generate an invitation for Alice
         await faber_agent.generate_invitation(display_qr=True, wait=True)
@@ -237,36 +255,67 @@ async def main(args):
             elif option == "1":
                 log_status("#13 Issue credential offer to X")
 
-                # TODO define attributes to send for credential
-                faber_agent.agent.cred_attrs[faber_agent.cred_def_id] = {
-                    "name": "Alice Smith",
-                    "date": "2018-05-28",
-                    "degree": "Maths",
-                    "age": "24",
-                    "timestamp": str(int(time.time())),
-                }
+                if faber_agent.cred_type == CRED_FORMAT_INDY:
+                    faber_agent.agent.cred_attrs[faber_agent.cred_def_id] = {
+                        "name": "Alice Smith",
+                        "date": "2018-05-28",
+                        "degree": "Maths",
+                        "age": "24",
+                        "timestamp": str(int(time.time())),
+                    }
 
-                cred_preview = {
-                    "@type": CRED_PREVIEW_TYPE,
-                    "attributes": [
-                        {"name": n, "value": v}
-                        for (n, v) in faber_agent.agent.cred_attrs[
-                            faber_agent.cred_def_id
-                        ].items()
-                    ],
-                }
-                offer_request = {
-                    "connection_id": faber_agent.agent.connection_id,
-                    "comment": f"Offer on cred def id {faber_agent.cred_def_id}",
-                    "auto_remove": False,
-                    "credential_preview": cred_preview,
-                    "filter": {"indy": {"cred_def_id": faber_agent.cred_def_id}},
-                    "trace": exchange_tracing,
-                }
+                    cred_preview = {
+                        "@type": CRED_PREVIEW_TYPE,
+                        "attributes": [
+                            {"name": n, "value": v}
+                            for (n, v) in faber_agent.agent.cred_attrs[
+                                faber_agent.cred_def_id
+                            ].items()
+                        ],
+                    }
+                    offer_request = {
+                        "connection_id": faber_agent.agent.connection_id,
+                        "comment": f"Offer on cred def id {faber_agent.cred_def_id}",
+                        "auto_remove": False,
+                        "credential_preview": cred_preview,
+                        "filter": {"indy": {"cred_def_id": faber_agent.cred_def_id}},
+                        "trace": exchange_tracing,
+                    }
+
+                elif faber_agent.cred_type == CRED_FORMAT_JSON_LD:
+                    offer_request = {
+                      "connection_id": faber_agent.agent.connection_id,
+                      "filter": {
+                        "ld_proof": {
+                          "credential": {
+                            "@context": [
+                              "https://www.w3.org/2018/credentials/v1",
+                              "https://www.w3.org/2018/credentials/examples/v1"
+                            ],
+                            "type": ["VerifiableCredential", "UniversityDegreeCredential"],
+                            "issuer": faber_agent.agent.did,
+                            "issuanceDate": "2020-01-01T12:00:00Z",
+                            "credentialSubject": {
+                              "degree": {
+                                "type": "BachelorDegree",
+                                "name": "Bachelor of Science and Arts"
+                              },
+                              "college": "Faber College"
+                            }
+                          },
+                          "options": {
+                            "proofType": SIG_TYPE_BLS
+                          }
+                        }
+                      }
+                    }
+
+                else:
+                    raise Exception("Error invalid credential type:" + faber_agent.cred_type)
+
                 await faber_agent.agent.admin_POST(
                     "/issue-credential-2.0/send-offer", offer_request
                 )
-                # TODO issue an additional credential for Student ID
 
             elif option == "2":
                 log_status("#20 Request proof of degree from alice")
