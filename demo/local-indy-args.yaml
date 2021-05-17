@@ -8,6 +8,7 @@
 admin-insecure-mode: true
 admin: [0.0.0.0, 8031]
 label: My Indy Agent
+log-level: info
 # the following is the callback url for your controller
 webhook-url: http://localhost:7000/agentcb
 # assumes you are running a local von-network, like:

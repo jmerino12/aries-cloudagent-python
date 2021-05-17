@@ -621,7 +621,7 @@ class V20PresManager:
                     session, {"thread_id": thread_id}, None
                 )
 
-        _check_proof_vs_proposal()
+        # _check_proof_vs_proposal()
 
         pres_ex_record.pres = message.serialize()
         pres_ex_record.state = V20PresExRecord.STATE_PRESENTATION_RECEIVED

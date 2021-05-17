@@ -273,7 +273,7 @@ async def main(args):
                 req_attrs = [
                     {
                         "name": "name",
-                        "restrictions": [{"schema_name": faber_schema_name}],
+                        "restrictions": [{"schema_name": faber_schema_name, "attr::name::value": "Alice Smith"}],
                     },
                     {
                         "name": "date",
@@ -306,7 +306,7 @@ async def main(args):
                         "name": "age",
                         "p_type": ">=",
                         "p_value": 18,
-                        "restrictions": [{"schema_name": faber_schema_name}],
+                        "restrictions": [{"schema_name": faber_schema_name, "attr::name::value": "Alice Smith"}],
                     }
                 ]
                 indy_proof_request = {
