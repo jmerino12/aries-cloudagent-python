@@ -53,6 +53,7 @@ class AriesAgent(DemoAgent):
         admin_port: int,
         prefix: str = "Aries",
         no_auto: bool = False,
+        seed: str = None,
         **kwargs,
     ):
         super().__init__(
@@ -60,6 +61,7 @@ class AriesAgent(DemoAgent):
             http_port,
             admin_port,
             prefix=prefix,
+            seed=seed,
             extra_args=(
                 []
                 if no_auto
@@ -805,6 +807,8 @@ async def create_agent_with_args(args, ident: str = None):
     agent_ident = ident if ident else (args.ident if "ident" in args else "Aries")
     if "cred_type" in args and args.cred_type != CRED_FORMAT_INDY:
         public_did = None
+    elif "cred_type" in args and args.cred_type == CRED_FORMAT_INDY:
+        public_did = True
     else:
         public_did = args.public_did if "public_did" in args else None
     agent = AgentContainer(

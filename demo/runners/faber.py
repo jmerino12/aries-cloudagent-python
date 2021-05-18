@@ -172,6 +172,7 @@ async def main(args):
             multitenant=faber_agent.multitenant,
             mediation=faber_agent.mediation,
             wallet_type=faber_agent.wallet_type,
+            seed=faber_agent.seed,
         )
 
         if faber_agent.cred_type == CRED_FORMAT_INDY:
