@@ -521,7 +521,7 @@ async def present_proof_credentials_list(request: web.BaseRequest):
         raise web.HTTPBadRequest(reason=err.roll_up) from err
 
     credentials = indy_credentials + dif_credentials
-    pres_ex_record.log_state(
+    print(
         "Retrieved presentation credentials",
         {
             "presentation_exchange_id": pres_ex_id,

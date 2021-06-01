@@ -440,6 +440,7 @@ class DIFPresExchHandler:
 
     def create_vcrecord(self, cred_dict: dict) -> VCRecord:
         """Return VCRecord from a credential dict."""
+        print("Return VCRecord from a credential dict:", cred_dict)
         given_id = cred_dict.get("id")
         contexts = [ctx for ctx in cred_dict.get("@context") if type(ctx) is str]
 
