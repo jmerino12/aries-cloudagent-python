@@ -529,7 +529,6 @@ async def present_proof_credentials_list(request: web.BaseRequest):
             "extra_query": extra_query,
             "credentials": credentials,
         },
-        settings=context.settings,
     )
     return web.json_response(credentials)
 
