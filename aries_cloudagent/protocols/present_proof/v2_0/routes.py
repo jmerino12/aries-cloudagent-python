@@ -966,12 +966,14 @@ async def present_proof_verify_presentation(request: web.BaseRequest):
         except StorageNotFoundError as err:
             raise web.HTTPNotFound(reason=err.roll_up) from err
 
-        if pres_ex_record.state != (V20PresExRecord.STATE_PRESENTATION_RECEIVED) and pres_ex_record.state != (V20PresExRecord.STATE_DONE):
+        if (pres_ex_record.state != (V20PresExRecord.STATE_PRESENTATION_RECEIVED) and
+                pres_ex_record.state != (V20PresExRecord.STATE_DONE)):
             raise web.HTTPBadRequest(
                 reason=(
                     f"Presentation exchange {pres_ex_id} "
                     f"in {pres_ex_record.state} state "
-                    f"(must be {V20PresExRecord.STATE_PRESENTATION_RECEIVED}) or {V20PresExRecord.STATE_DONE})"
+                    f"(must be {V20PresExRecord.STATE_PRESENTATION_RECEIVED}) "
+                    f"or {V20PresExRecord.STATE_DONE})"
                 )
             )
 

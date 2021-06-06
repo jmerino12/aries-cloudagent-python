@@ -23,7 +23,12 @@ PYTHONPATH=.. ../bin/aca-py start \
    --auto-respond-credential-proposal \
    --auto-respond-credential-offer \
    --auto-respond-credential-request \
-   --auto-store-credential \
-   --auto-respond-presentation-proposal \
-   --auto-respond-presentation-request \
-   --auto-verify-presentation
+   --auto-store-credential
+
+# set these for full auto
+#   --auto-respond-credential-proposal \
+#   --auto-respond-credential-offer \
+#   --auto-respond-credential-request \
+#   --auto-respond-presentation-proposal \
+#   --auto-respond-presentation-request \
+#   --auto-verify-presentation \
