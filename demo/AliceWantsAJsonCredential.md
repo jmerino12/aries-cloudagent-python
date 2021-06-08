@@ -39,7 +39,7 @@ Using the Faber admin api, you have to create a DID with the appropriate:
 
 Note that "did:sov" must be a public DID (i.e. registered on the ledger) but "did:key" is not.
 
-For example, call the `/wallet/did/create` endpoint with the following payload:
+For example, in Faber's swagger page call the `/wallet/did/create` endpoint with the following payload:
 
 ```
 {
@@ -66,12 +66,15 @@ This will return something like:
 
 You do *not* create a schema or cred def for a JSON-LD credential (these are only required for "indy" credentials).
 
+You will need to create a DID as above for Alice as well (`/wallet/did/create` etc ...).
+
 Congradulations, you are now ready to start issuing JSON-LD credentials!
 
 - You have two agents with a connection established between the agents - you will need to copy Faber's `connection_id` into the examples below.
 - You have created a (non-public) DID for Faber to use to sign/issue the credentials - you will need to copy the DID that you created above into the examples below (as `issuer`).
+- You have created a (non-public) DID for Alice to use as her `credentialSubject.id` - this is required for Alice to sign the proof (the `credentialSubject.id` is not required, but then the provided presentation can't be verified).
 
-To issue a credential, use the `/issue-credential-2.0/send` (or `/issue-credential-2.0/create-offer`) endpoint, you can test with this example payload (just replace the "connection_id", "issuer" key and "proofType" with appropriate values:
+To issue a credential, use the `/issue-credential-2.0/send` (or `/issue-credential-2.0/create-offer`) endpoint, you can test with this example payload (just replace the "connection_id", "issuer" key, "credentialSubject.id" and "proofType" with appropriate values:
 
 ```
 {
@@ -87,6 +90,7 @@ To issue a credential, use the `/issue-credential-2.0/send` (or `/issue-credenti
         "issuer": "did:key:zUC71KdwBhq1FioWh53VXmyFiGpewNcg8Ld42WrSChpMzzskRWwHZfG9TJ7hPj8wzmKNrek3rW4ZkXNiHAjVchSmTr9aNUQaArK3KSkTySzjEM73FuDV62bjdAHF7EMnZ27poCE",
         "issuanceDate": "2020-01-01T12:00:00Z",
         "credentialSubject": {
+          "id": "did:key:aksdkajshdkajhsdkjahsdkjahsdj",
           "givenName": "Sally",
           "familyName": "Student",
           "degree": {
@@ -141,6 +145,7 @@ To see the issued credential, call the `/credentials/w3c` endpoint on Alice's ad
         "issuer": "did:key:zUC71Kd...poCE",
         "issuanceDate": "2020-01-01T12:00:00Z",
         "credentialSubject": {
+          "id": "did:key:aksdkajshdkajhsdkjahsdkjahsdj",
           "givenName": "Sally",
           "familyName": "Student",
           "degree": {
@@ -168,14 +173,14 @@ To see the issued credential, call the `/credentials/w3c` endpoint on Alice's ad
 
 ## Building More Realistic JSON-LD Credentials
 
-The above example uses the "https://www.w3.org/2018/credentials/examples/v1" context, which should not be used in a real application.
+The above example uses the "https://www.w3.org/2018/credentials/examples/v1" context, which should never be used in a real application.
 
 To build credentials in real life, you first determine which attributes you need and then include the appropriate contexts.
 
 
 ### Context schema.org
 
-You can use attributes defined on [schema.org](https://schema.org).  Although this is *NOT RECOMMENDED* (included here for illustrative purposes only) as individual attributes can't be validated (see the comment later on).
+You can use attributes defined on [schema.org](https://schema.org).  Although this is *NOT RECOMMENDED* (included here for illustrative purposes only) - individual attributes can't be validated (see the comment later on).
 
 You first include `https://schema.org` in the `@context` block of the credential as follows:
 
@@ -204,6 +209,7 @@ For example to issue a credetial with [givenName](https://schema.org/givenName),
         "issuer": "did:key:zUC71pj2gpDLfcZ9DE1bMtjZGWCSLhkQsUCaKjqXtCftGkz27894pEX9VvGNiFsaV67gqv2TEPQ2aDaDDdTDNp42LfDdK1LaWSBCfzsQEyaiR1zjZm1RtoRu1ZM6v6vz4TiqDgU",
         "issuanceDate": "2020-01-01T12:00:00Z",
         "credentialSubject": {
+          "id": "did:key:aksdkajshdkajhsdkjahsdkjahsdj",
           "givenName": "Sally",
           "familyName": "Student",
           "alumniOf": "Example University"
@@ -221,6 +227,7 @@ Note that with `https://schema.org`, if you include attributes that aren't defin
 
 ```
 "credentialSubject": {
+  "id": "did:key:aksdkajshdkajhsdkjahsdkjahsdj",
   "givenName": "Sally",
   "familyName": "Student",
   "alumniOf": "Example University",
@@ -246,6 +253,7 @@ You can include more complex schemas, for example to use the schema.org [Person]
         "issuer": "did:key:zUC71pj2gpDLfcZ9DE1bMtjZGWCSLhkQsUCaKjqXtCftGkz27894pEX9VvGNiFsaV67gqv2TEPQ2aDaDDdTDNp42LfDdK1LaWSBCfzsQEyaiR1zjZm1RtoRu1ZM6v6vz4TiqDgU",
         "issuanceDate": "2020-01-01T12:00:00Z",
         "credentialSubject": {
+          "id": "did:key:aksdkajshdkajhsdkjahsdkjahsdj",
           "student": {
             "type": "Person",
             "givenName": "Sally",
@@ -283,7 +291,7 @@ The following examples use the W3C citizenship and vaccination contexts:
         "issuer": "did:key:zUC71pj2gpDLfcZ9DE1bMtjZGWCSLhkQsUCaKjqXtCftGkz27894pEX9VvGNiFsaV67gqv2TEPQ2aDaDDdTDNp42LfDdK1LaWSBCfzsQEyaiR1zjZm1RtoRu1ZM6v6vz4TiqDgU",
         "issuanceDate": "2020-01-01T12:00:00Z",
         "credentialSubject": {
-            "id": "did:example:b34ca6cd37bbf23",
+            "id": "did:key:b34ca6cd37bbf23",
             "type": ["PermanentResident", "Person"],
             "givenName": "JOHN",
             "familyName": "SMITH",
@@ -319,6 +327,7 @@ The following examples use the W3C citizenship and vaccination contexts:
         "issuer": "did:key:zUC71pj2gpDLfcZ9DE1bMtjZGWCSLhkQsUCaKjqXtCftGkz27894pEX9VvGNiFsaV67gqv2TEPQ2aDaDDdTDNp42LfDdK1LaWSBCfzsQEyaiR1zjZm1RtoRu1ZM6v6vz4TiqDgU",
         "issuanceDate": "2020-01-01T12:00:00Z",
         "credentialSubject": {
+            "id": "did:key:aksdkajshdkajhsdkjahsdkjahsdj",
             "type": "VaccinationEvent",
             "batchNumber": "1183738569",
             "administeringCentre": "MoH",
