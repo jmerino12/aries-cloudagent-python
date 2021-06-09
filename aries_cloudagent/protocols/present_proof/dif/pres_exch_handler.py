@@ -402,7 +402,6 @@ class DIFPresExchHandler:
 
     def create_vcrecord(self, cred_dict: dict) -> VCRecord:
         """Return VCRecord from a credential dict."""
-        print("Return VCRecord from a credential dict:", cred_dict)
         proofs = cred_dict.get("proof") or []
         proof_types = None
         if type(proofs) is dict:

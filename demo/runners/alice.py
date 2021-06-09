@@ -179,35 +179,58 @@ class AliceAgent(AriesAgent):
                             "self_attested_attributes": self_attested,
                         }
                     }
-
-                    log_status("#26 Send the proof to X")
-                    await self.admin_POST(
-                        f"/present-proof-2.0/records/{pres_ex_id}/send-presentation",
-                        request,
-                    )
                 except ClientError:
                     pass
 
-            if pres_request_dif:
+            elif pres_request_dif:
                 try:
                     # select credentials to provide for the proof
                     creds = await self.admin_GET(
                         f"/present-proof-2.0/records/{pres_ex_id}/credentials"
                     )
-                    if creds:
-                        for row in sorted(
+                    if creds and 0 < len(creds):
+                        creds = sorted(
                             creds,
                             key=lambda c: c["issuanceDate"],
                             reverse=True,
-                        ):
-                            for referent in row["presentation_referents"]:
-                                if referent not in creds_by_reft:
-                                    creds_by_reft[referent] = row
+                        )
+                        record_id = creds[0]["record_id"]
+                    else:
+                        record_id = None
+
+                    log_status("#25 Generate the proof")
+                    request = {
+                        "dif": pres_request_dif,
+                    }
+                    request["dif"]["record_ids"] = [record_id,]
+
+                    # note that the holder/prover can also/or specify constraints by adding filters, for example:
+                    #
+                    # request["dif"]["presentation_definition"]["input_descriptors"]["constraints"]["fields"].append(
+                    #      {
+                    #          "path": [
+                    #              "$.id"
+                    #          ],
+                    #          "purpose": "Specify the id of the credential to present",
+                    #          "filter": {
+                    #              "const": "https://credential.example.com/residents/1234567890"
+                    #          }
+                    #      }
+                    # )
+                    #
+                    # (NOTE the above assumes the credential contains an "id", which is an optional field)
 
                 except ClientError:
                     pass
 
-                pass
+            else:
+                raise Exception("Invalid presentation request received")
+
+            log_status("#26 Send the proof to X")
+            await self.admin_POST(
+                f"/present-proof-2.0/records/{pres_ex_id}/send-presentation",
+                request,
+            )
 
     async def handle_basicmessages(self, message):
         self.log("Received message:", message["content"])
