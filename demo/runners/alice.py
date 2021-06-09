@@ -126,65 +126,87 @@ class AliceAgent(AriesAgent):
         state = message["state"]
         pres_ex_id = message["pres_ex_id"]
         log_msg("Presentation: state =", state, ", pres_ex_id =", pres_ex_id)
-        print(json.dumps(message))
 
         if state == "request-received":
             log_status(
                 "#24 Query for credentials in the wallet that satisfy the proof request"
             )
-            pres_request = message["by_format"].get("pres_request", {}).get("indy")
+            pres_request_indy = message["by_format"].get("pres_request", {}).get("indy")
+            pres_request_dif = message["by_format"].get("pres_request", {}).get("dif")
 
-            # include self-attested attributes (not included in credentials)
-            creds_by_reft = {}
-            revealed = {}
-            self_attested = {}
-            predicates = {}
+            if pres_request_indy:
+                # include self-attested attributes (not included in credentials)
+                creds_by_reft = {}
+                revealed = {}
+                self_attested = {}
+                predicates = {}
 
-            try:
-                # select credentials to provide for the proof
-                creds = await self.admin_GET(
-                    f"/present-proof-2.0/records/{pres_ex_id}/credentials"
-                )
-                if creds:
-                    for row in sorted(
-                        creds,
-                        key=lambda c: int(c["cred_info"]["attrs"]["timestamp"]),
-                        reverse=True,
-                    ):
-                        for referent in row["presentation_referents"]:
-                            if referent not in creds_by_reft:
-                                creds_by_reft[referent] = row
+                try:
+                    # select credentials to provide for the proof
+                    creds = await self.admin_GET(
+                        f"/present-proof-2.0/records/{pres_ex_id}/credentials"
+                    )
+                    if creds:
+                        for row in sorted(
+                            creds,
+                            key=lambda c: int(c["cred_info"]["attrs"]["timestamp"]),
+                            reverse=True,
+                        ):
+                            for referent in row["presentation_referents"]:
+                                if referent not in creds_by_reft:
+                                    creds_by_reft[referent] = row
 
-                for referent in pres_request["requested_attributes"]:
-                    if referent in creds_by_reft:
-                        revealed[referent] = {
-                            "cred_id": creds_by_reft[referent]["cred_info"]["referent"],
-                            "revealed": True,
+                    for referent in pres_request_indy["requested_attributes"]:
+                        if referent in creds_by_reft:
+                            revealed[referent] = {
+                                "cred_id": creds_by_reft[referent]["cred_info"]["referent"],
+                                "revealed": True,
+                            }
+                        else:
+                            self_attested[referent] = "my self-attested value"
+
+                    for referent in pres_request_indy["requested_predicates"]:
+                        if referent in creds_by_reft:
+                            predicates[referent] = {
+                                "cred_id": creds_by_reft[referent]["cred_info"]["referent"]
+                            }
+
+                    log_status("#25 Generate the proof")
+                    request = {
+                        "indy": {
+                            "requested_predicates": predicates,
+                            "requested_attributes": revealed,
+                            "self_attested_attributes": self_attested,
                         }
-                    else:
-                        self_attested[referent] = "my self-attested value"
-
-                for referent in pres_request["requested_predicates"]:
-                    if referent in creds_by_reft:
-                        predicates[referent] = {
-                            "cred_id": creds_by_reft[referent]["cred_info"]["referent"]
-                        }
-
-                log_status("#25 Generate the proof")
-                request = {
-                    "indy": {
-                        "requested_predicates": predicates,
-                        "requested_attributes": revealed,
-                        "self_attested_attributes": self_attested,
                     }
-                }
 
-                log_status("#26 Send the proof to X")
-                await self.admin_POST(
-                    f"/present-proof-2.0/records/{pres_ex_id}/send-presentation",
-                    request,
-                )
-            except ClientError:
+                    log_status("#26 Send the proof to X")
+                    await self.admin_POST(
+                        f"/present-proof-2.0/records/{pres_ex_id}/send-presentation",
+                        request,
+                    )
+                except ClientError:
+                    pass
+
+            if pres_request_dif:
+                try:
+                    # select credentials to provide for the proof
+                    creds = await self.admin_GET(
+                        f"/present-proof-2.0/records/{pres_ex_id}/credentials"
+                    )
+                    if creds:
+                        for row in sorted(
+                            creds,
+                            key=lambda c: c["issuanceDate"],
+                            reverse=True,
+                        ):
+                            for referent in row["presentation_referents"]:
+                                if referent not in creds_by_reft:
+                                    creds_by_reft[referent] = row
+
+                except ClientError:
+                    pass
+
                 pass
 
     async def handle_basicmessages(self, message):
