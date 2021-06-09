@@ -126,6 +126,7 @@ class AliceAgent(AriesAgent):
         state = message["state"]
         pres_ex_id = message["pres_ex_id"]
         log_msg("Presentation: state =", state, ", pres_ex_id =", pres_ex_id)
+        print(json.dumps(message))
 
         if state == "request-received":
             log_status(

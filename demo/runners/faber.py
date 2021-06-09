@@ -285,30 +285,38 @@ async def main(args):
 
                 elif faber_agent.cred_type == CRED_FORMAT_JSON_LD:
                     offer_request = {
-                      "connection_id": faber_agent.agent.connection_id,
-                      "filter": {
-                        "ld_proof": {
-                          "credential": {
-                            "@context": [
-                              "https://www.w3.org/2018/credentials/v1",
-                              "https://www.w3.org/2018/credentials/examples/v1"
-                            ],
-                            "type": ["VerifiableCredential", "UniversityDegreeCredential"],
-                            "issuer": faber_agent.agent.did,
-                            "issuanceDate": "2020-01-01T12:00:00Z",
-                            "credentialSubject": {
-                              "degree": {
-                                "type": "BachelorDegree",
-                                "name": "Bachelor of Science and Arts"
-                              },
-                              "college": "Faber College"
+                        "connection_id": faber_agent.agent.connection_id,
+                        "filter": {
+                            "ld_proof": {
+                                "credential": {
+                                    "@context": [
+                                        "https://www.w3.org/2018/credentials/v1",
+                                        "https://w3id.org/citizenship/v1"
+                                    ],
+                                    "type": [
+                                        "VerifiableCredential",
+                                        "PermanentResident"
+                                    ],
+                                    "id": "https://credential.example.com/residents/1234567890",
+                                    "issuer": faber_agent.agent.did,
+                                    "issuanceDate": "2020-01-01T12:00:00Z",
+                                    "credentialSubject": {
+                                        "type": [
+                                            "PermanentResident"
+                                        ],
+                                        #"id": "<need did:key of holder>",
+                                        "givenName": "ALICE",
+                                        "familyName": "SMITH",
+                                        "gender": "Female",
+                                        "birthCountry": "Bahamas",
+                                        "birthDate": "1958-07-17"
+                                    }
+                                },
+                                "options": {
+                                    "proofType": SIG_TYPE_BLS
+                                }
                             }
-                          },
-                          "options": {
-                            "proofType": SIG_TYPE_BLS
-                          }
                         }
-                      }
                     }
 
                 else:
@@ -320,64 +328,127 @@ async def main(args):
 
             elif option == "2":
                 log_status("#20 Request proof of degree from alice")
-                req_attrs = [
-                    {
-                        "name": "name",
-                        "restrictions": [{"schema_name": faber_schema_name}],
-                    },
-                    {
-                        "name": "date",
-                        "restrictions": [{"schema_name": faber_schema_name}],
-                    },
-                ]
-                if faber_agent.revocation:
-                    req_attrs.append(
+                if faber_agent.cred_type == CRED_FORMAT_INDY:
+                    req_attrs = [
                         {
-                            "name": "degree",
+                            "name": "name",
                             "restrictions": [{"schema_name": faber_schema_name}],
-                            "non_revoked": {"to": int(time.time() - 1)},
                         },
-                    )
-                else:
-                    req_attrs.append(
                         {
-                            "name": "degree",
+                            "name": "date",
+                            "restrictions": [{"schema_name": faber_schema_name}],
+                        },
+                    ]
+                    if faber_agent.revocation:
+                        req_attrs.append(
+                            {
+                                "name": "degree",
+                                "restrictions": [{"schema_name": faber_schema_name}],
+                                "non_revoked": {"to": int(time.time() - 1)},
+                            },
+                        )
+                    else:
+                        req_attrs.append(
+                            {
+                                "name": "degree",
+                                "restrictions": [{"schema_name": faber_schema_name}],
+                            }
+                        )
+                    if SELF_ATTESTED:
+                        # test self-attested claims
+                        req_attrs.append(
+                            {"name": "self_attested_thing"},
+                        )
+                    req_preds = [
+                        # test zero-knowledge proofs
+                        {
+                            "name": "age",
+                            "p_type": ">=",
+                            "p_value": 18,
                             "restrictions": [{"schema_name": faber_schema_name}],
                         }
-                    )
-                if SELF_ATTESTED:
-                    # test self-attested claims
-                    req_attrs.append(
-                        {"name": "self_attested_thing"},
-                    )
-                req_preds = [
-                    # test zero-knowledge proofs
-                    {
-                        "name": "age",
-                        "p_type": ">=",
-                        "p_value": 18,
-                        "restrictions": [{"schema_name": faber_schema_name}],
+                    ]
+                    indy_proof_request = {
+                        "name": "Proof of Education",
+                        "version": "1.0",
+                        "requested_attributes": {
+                            f"0_{req_attr['name']}_uuid": req_attr for req_attr in req_attrs
+                        },
+                        "requested_predicates": {
+                            f"0_{req_pred['name']}_GE_uuid": req_pred
+                            for req_pred in req_preds
+                        },
                     }
-                ]
-                indy_proof_request = {
-                    "name": "Proof of Education",
-                    "version": "1.0",
-                    "requested_attributes": {
-                        f"0_{req_attr['name']}_uuid": req_attr for req_attr in req_attrs
-                    },
-                    "requested_predicates": {
-                        f"0_{req_pred['name']}_GE_uuid": req_pred
-                        for req_pred in req_preds
-                    },
-                }
 
-                if faber_agent.revocation:
-                    indy_proof_request["non_revoked"] = {"to": int(time.time())}
-                proof_request_web_request = {
-                    "connection_id": faber_agent.agent.connection_id,
-                    "presentation_request": {"indy": indy_proof_request},
-                    "trace": exchange_tracing,
-                }
+                    if faber_agent.revocation:
+                        indy_proof_request["non_revoked"] = {"to": int(time.time())}
+                    proof_request_web_request = {
+                        "connection_id": faber_agent.agent.connection_id,
+                        "presentation_request": {"indy": indy_proof_request},
+                        "trace": exchange_tracing,
+                    }
+
+                elif faber_agent.cred_type == CRED_FORMAT_JSON_LD:
+                    proof_request_web_request = {
+                        "comment": "test proof request for json-ld",
+                        "connection_id": faber_agent.agent.connection_id,
+                        "presentation_request": {
+                            "dif": {
+                                "options": {
+                                    "challenge": "3fa85f64-5717-4562-b3fc-2c963f66afa7",
+                                    "domain": "4jt78h47fh47"
+                                },
+                                "presentation_definition": {
+                                    "id": "32f54163-7166-48f1-93d8-ff217bdb0654",
+                                    "format": {
+                                        "ldp_vp": {
+                                            "proof_type": [
+                                                SIG_TYPE_BLS
+                                            ]
+                                        }
+                                    },
+                                    "input_descriptors": [
+                                        {
+                                            "id": "citizenship_input_1",
+                                            "name": "EU Driver's License",
+                                            "schema": [
+                                                {
+                                                    "uri": "https://www.w3.org/2018/credentials#VerifiableCredential"
+                                                },
+                                                {
+                                                    "uri": "https://w3id.org/citizenship#PermanentResident"
+                                                }
+                                            ],
+                                            "constraints": {
+                                                "limit_disclosure": "required",
+                                                "fields": [
+                                                    {
+                                                        "path": [
+                                                            "$.credentialSubject.familyName"
+                                                        ],
+                                                        "purpose": "The claim must be from one of the specified person",
+                                                        "filter": {
+                                                            "const": "SMITH"
+                                                        }
+                                                    },
+                                                    {
+                                                        "path": [
+                                                            "$.credentialSubject.givenName"
+                                                        ],
+                                                        "purpose": "The claim must be from one of the specified person"
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+
+                else:
+                    raise Exception("Error invalid credential type:" + faber_agent.cred_type)
+
                 await agent.admin_POST(
                     "/present-proof-2.0/send-request", proof_request_web_request
                 )
