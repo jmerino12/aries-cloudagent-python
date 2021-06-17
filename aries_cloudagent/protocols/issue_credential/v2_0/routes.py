@@ -313,6 +313,33 @@ class V20CredOfferRequestSchema(V20IssueCredSchemaCore):
     )
 
 
+class V20CredBoundRequestRequestSchema(OpenAPISchema):
+    """Request schema for sending bound credential request admin message."""
+
+    filter_ = fields.Nested(
+        V20CredFilterSchema,
+        required=False,
+        data_key="filter",
+        description="Credential specification criteria by format",
+    )
+    counter_request = fields.Nested(
+        V20CredPreviewSchema,
+        required=False,
+        description="Optional content for counter-request",
+    )
+
+    @validates_schema
+    def validate_fields(self, data, **kwargs):
+        """Validate schema fields: need both filter and counter_request or neither."""
+        if ("filter_" in data and "indy" in data["filter_"]) ^ (
+            "counter_request" in data
+        ):
+            raise ValidationError(
+                f"V20CredBoundRequestRequestSchema\n{data}\nrequires "
+                "both indy filter and counter_request or neither"
+            )
+
+
 class V20CreateFreeOfferResultSchema(OpenAPISchema):
     """Result schema for creating free offer."""
 
@@ -1199,10 +1226,11 @@ async def credential_exchange_send_free_request(request: web.BaseRequest):
     summary="Send issuer a credential request",
 )
 @match_info_schema(V20CredExIdMatchInfoSchema())
+@request_schema(V20CredBoundRequestRequestSchema())
 @response_schema(V20CredExRecordSchema(), 200, description="")
 async def credential_exchange_send_bound_request(request: web.BaseRequest):
     """
-    Request handler for sending credential request.
+    Request handler for sending bound credential request.
 
     Args:
         request: aiohttp request object
@@ -1215,6 +1243,10 @@ async def credential_exchange_send_bound_request(request: web.BaseRequest):
 
     context: AdminRequestContext = request["context"]
     outbound_handler = request["outbound_message_router"]
+
+    body = await request.json() if request.body_exists else {}
+    filt_spec = body.get("filter")
+    request_spec = body.get("counter_request")
 
     cred_ex_id = request.match_info["cred_ex_id"]
 
@@ -1235,10 +1267,21 @@ async def credential_exchange_send_bound_request(request: web.BaseRequest):
             if not conn_record.is_ready:
                 raise web.HTTPForbidden(reason=f"Connection {connection_id} not ready")
 
+        print("request_spec:", request_spec)
+        print("filt_spec:", filt_spec)
+        proposal_spec = V20CredProposal(
+            comment=None,
+            credential_preview=V20CredPreview.deserialize(request_spec) if request_spec else None,
+            **_formats_filters(filt_spec),
+        )
+        print("proposal_spec:", proposal_spec)
+        print("proposal_spec:", proposal_spec.deserialize())
+
         cred_manager = V20CredManager(context.profile)
         cred_ex_record, cred_request_message = await cred_manager.create_request(
             cred_ex_record,
             conn_record.my_did,
+            proposal_spec=proposal_spec,
         )
 
         result = cred_ex_record.serialize()

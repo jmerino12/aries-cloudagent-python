@@ -314,7 +314,8 @@ class V20CredManager:
         return cred_ex_record
 
     async def create_request(
-        self, cred_ex_record: V20CredExRecord, holder_did: str, comment: str = None
+        self, cred_ex_record: V20CredExRecord, holder_did: str, comment: str = None,
+        proposal_spec: V20CredProposal = None,
     ) -> Tuple[V20CredExRecord, V20CredRequest]:
         """
         Create a credential request.
@@ -328,6 +329,8 @@ class V20CredManager:
             A tuple (credential exchange record, credential request message)
 
         """
+        if proposal_spec:
+            print("create_request() with proposal_spec:", proposal_spec.serialize())
         if cred_ex_record.cred_request:
             raise V20CredManagerError(
                 "create_request() called multiple times for "
@@ -343,24 +346,32 @@ class V20CredManager:
                     f"(must be {V20CredExRecord.STATE_OFFER_RECEIVED})"
                 )
 
-            cred_offer = cred_ex_record.cred_offer
-
+            if proposal_spec:
+                cred_offer = proposal_spec
+            else:
+                cred_offer = cred_ex_record.cred_offer
             input_formats = cred_offer.formats
+            if cred_offer:
+                print("create_request() with cred_offer:", cred_offer.serialize())
         # start with request (not allowed for indy -> checked in indy format handler)
         # use proposal formats
         else:
-            cred_proposal = cred_ex_record.cred_proposal
-            input_formats = cred_proposal.formats
+            cred_offer = cred_ex_record.cred_proposal
+            input_formats = cred_offer.formats
+            if cred_proposal:
+                print("create_request() with cred_proposal:", cred_proposal.serialize())
 
         request_formats = []
         # Format specific create_request handler
+        print(" ... continue with input_formats:", input_formats)
         for format in input_formats:
             cred_format = V20CredFormat.Format.get(format.format)
 
             if cred_format:
                 request_formats.append(
                     await cred_format.handler(self.profile).create_request(
-                        cred_ex_record, {"holder_did": holder_did}
+                        cred_ex_record, cred_offer,
+                        # {"holder_did": holder_did}
                     )
                 )
 

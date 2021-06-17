@@ -410,6 +410,7 @@ class LDProofCredFormatHandler(V20CredFormatHandler):
         self, cred_ex_record: V20CredExRecord, request_data: Mapping = None
     ) -> CredFormatAttachment:
         """Create linked data proof credential request."""
+        print("handler.create_request() with:", request_data)
         if cred_ex_record.cred_offer:
             request_data = cred_ex_record.cred_offer.attachment(
                 LDProofCredFormatHandler.format
@@ -425,6 +426,7 @@ class LDProofCredFormatHandler(V20CredFormatHandler):
                 "Cannot create linked data proof request without offer or input data"
             )
 
+        print("... request_data:", request_data)
         detail = LDProofVCDetail.deserialize(request_data)
         detail = await self._prepare_detail(detail)
 

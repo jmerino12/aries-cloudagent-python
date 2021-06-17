@@ -286,7 +286,7 @@ The following example uses the W3C citizenship context to issue a PermanentResid
 
 ```
 {
-    "connection_id": "41acd909-9f45-4c69-8641-8146e0444a57",
+    "connection_id": "38239904-77c1-425f-8c13-474ca02e84a6",
     "filter": {
         "ld_proof": {
             "credential": {
@@ -299,13 +299,13 @@ The following example uses the W3C citizenship context to issue a PermanentResid
                     "PermanentResident"
                 ],
                 "id": "https://credential.example.com/residents/1234567890",
-                "issuer": "did:key:zUC7Dus47jW5Avcne8LLsUvJSdwspmErgehxMWqZZy8eSSNoHZ4x8wgs77sAmQtCADED5RQP1WWhvt7KFNm6GGMxdSGpKu3PX6R9a61G9VoVsiFoRf1yoK6pzhq9jtFP3e2SmU9",
+                "issuer": "did:key:zUC73MoBBRZRHBdtFTcu7jC1jMymNj7uMd3HbZ48w39w4L7SskVWL58DHERPWTN879ixHrEY3AbmovxXcJ4NDEQQTHtDEw7RZcJ9yzjEvnaXSmXiiiVJBsVYvy36isLF8KbMVD1",
                 "issuanceDate": "2020-01-01T12:00:00Z",
                 "credentialSubject": {
                     "type": [
                         "PermanentResident"
                     ],
-                    "id": "did:key:zUC7CXi82AXbkv4SvhxDxoufrLwQSAo79qbKiw7omCQ3c4TyciDdb9s3GTCbMvsDruSLZX6HNsjGxAr2SMLCNCCBRN5scukiZ4JV9FDPg5gccdqE9nfCU2zUcdyqRiUVnn9ZH83",
+                    "id": "did:key:zUC7GYP7BB6zUHTVhRrSpQJ21or6uumXvVjN2ogJxdobkc4HKDBRugFfhRVNyLBxu2XsTLEukT5UaJXPYd2knzEwNqrj6yoj3iS11rCA1pvgFAdDihsMfdfhZvNGWdAT1xhUs2Z",
                     "givenName": "ALICE",
                     "familyName": "SMITH",
                     "gender": "Female",
@@ -333,7 +333,7 @@ To request a proof, submit the following (with appropriate `connection_id`) to F
 ```
 {
     "comment": "string",
-    "connection_id": "41acd909-9f45-4c69-8641-8146e0444a57",
+    "connection_id": "38239904-77c1-425f-8c13-474ca02e84a6",
     "presentation_request": {
         "dif": {
             "options": {
