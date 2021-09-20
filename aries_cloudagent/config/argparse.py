@@ -202,6 +202,7 @@ class AdminGroup(ArgumentGroup):
             if hook_url:
                 hook_urls.append(hook_url)
             settings["admin.webhook_urls"] = hook_urls
+            print("Web hooks:", settings["admin.webhook_urls"])
 
             settings["admin.admin_client_max_request_size"] = (
                 args.admin_client_max_request_size or 1
