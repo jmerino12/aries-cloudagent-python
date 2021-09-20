@@ -578,6 +578,7 @@ class AdminServer(BaseAdminServer):
                 "wallet.storage_creds",
             ]
         }
+        print("Admin config:", config)
         for index in range(len(config.get("admin.webhook_urls", []))):
             config["admin.webhook_urls"][index] = re.sub(
                 r"#.*",
@@ -816,6 +817,7 @@ class AdminServer(BaseAdminServer):
 
         if self.webhook_router:
             for endpoint in webhook_urls:
+                print(">>> Send web hook to:", endpoint)
                 self.webhook_router(
                     topic,
                     payload,
