@@ -448,6 +448,7 @@ class OutboundTransportManager:
     def deliver_queued_message(self, queued: QueuedOutboundMessage) -> asyncio.Task:
         """Kick off delivery of a queued message."""
         transport = self.get_transport_instance(queued.transport_id)
+        print(">>> queue endpoint/key:", queued.endpoint, queued.api_key)
         queued.task = self.task_queue.run(
             transport.handle_message(
                 queued.profile,
@@ -489,6 +490,7 @@ class OutboundTransportManager:
                 queued.retries -= 1
                 queued.state = QueuedOutboundMessage.STATE_RETRY
                 queued.retry_at = time.perf_counter() + 10
+                print(">>> retry endpoint/key:", queued.endpoint, queued.api_key)
             else:
                 LOGGER.exception(
                     ">>> Outbound message failed to deliver, NOT Re-queued.",
@@ -498,6 +500,7 @@ class OutboundTransportManager:
         else:
             queued.error = None
             queued.state = QueuedOutboundMessage.STATE_DONE
+            print(">>> completed endpoint/key:", queued.endpoint, queued.api_key)
         queued.task = None
         self.process_queued()
 
