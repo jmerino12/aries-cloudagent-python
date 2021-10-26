@@ -159,6 +159,7 @@ class IndyPresExchangeHandler(V20PresFormatHandler):
             pres_ex_record=pres_ex_record,
             requested_credentials=requested_credentials,
         )
+        print("Returning indy_proof:", indy_proof)
         return self.get_format_data(PRES_20, indy_proof)
 
     async def receive_pres(

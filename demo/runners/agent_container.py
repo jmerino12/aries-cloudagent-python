@@ -331,6 +331,7 @@ class AriesAgent(DemoAgent):
                 }
 
                 log_status("#26 Send the proof to X")
+                print("v1 send proof:", request)
                 await self.admin_POST(
                     (
                         "/present-proof/records/"
@@ -344,6 +345,7 @@ class AriesAgent(DemoAgent):
         elif state == "presentation_received":
             log_status("#27 Process the proof provided by X")
             log_status("#28 Check if proof is valid")
+            print("v1 verify proof:", message)
             proof = await self.admin_POST(
                 f"/present-proof/records/{presentation_exchange_id}/verify-presentation"
             )
@@ -475,6 +477,7 @@ class AriesAgent(DemoAgent):
                 raise Exception("Invalid presentation request received")
 
             log_status("#26 Send the proof to X: " + json.dumps(request))
+            print("v2 send proof:", request)
             await self.admin_POST(
                 f"/present-proof-2.0/records/{pres_ex_id}/send-presentation",
                 request,
@@ -484,6 +487,7 @@ class AriesAgent(DemoAgent):
             # verifier role
             log_status("#27 Process the proof provided by X")
             log_status("#28 Check if proof is valid")
+            print("v2 verify proof:", message)
             proof = await self.admin_POST(
                 f"/present-proof-2.0/records/{pres_ex_id}/verify-presentation"
             )
