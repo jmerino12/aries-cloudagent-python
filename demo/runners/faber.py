@@ -208,12 +208,12 @@ class FaberAgent(AriesAgent):
                 )
             req_preds = [
                 # test zero-knowledge proofs
-                {
-                    "name": "birthdate_dateint",
-                    "p_type": "<=",
-                    "p_value": int(birth_date.strftime(birth_date_format)),
-                    "restrictions": [{"schema_name": "degree schema"}],
-                }
+                #{
+                #    "name": "birthdate_dateint",
+                #    "p_type": "<=",
+                #    "p_value": int(birth_date.strftime(birth_date_format)),
+                #    "restrictions": [{"schema_name": "degree schema"}],
+                #}
             ]
             indy_proof_request = {
                 "name": "Proof of Education",
@@ -271,12 +271,12 @@ class FaberAgent(AriesAgent):
                     )
                 req_preds = [
                     # test zero-knowledge proofs
-                    {
-                        "name": "birthdate_dateint",
-                        "p_type": "<=",
-                        "p_value": int(birth_date.strftime(birth_date_format)),
-                        "restrictions": [{"schema_name": "degree schema"}],
-                    }
+                    #{
+                    #    "name": "birthdate_dateint",
+                    #    "p_type": "<=",
+                    #    "p_value": int(birth_date.strftime(birth_date_format)),
+                    #    "restrictions": [{"schema_name": "degree schema"}],
+                    #}
                 ]
                 indy_proof_request = {
                     "name": "Proof of Education",
