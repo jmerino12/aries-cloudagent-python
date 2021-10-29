@@ -305,6 +305,7 @@ class PresentationManager:
 
         """
         presentation = message.indy_proof()
+        print("Received presentation:", presentation)
 
         thread_id = message._thread_id
         connection_id_filter = (

@@ -47,8 +47,12 @@ class IndySdkVerifier(IndyVerifier):
             rev_reg_entries: revocation registry entries
         """
 
+        print(">>>>> verify presentation")
+        print("pres_req:", pres_req)
+        print("pres:", pres)
+        print("credential_definitions:", credential_definitions)
         try:
-            self.non_revoc_intervals(pres_req, pres)
+            self.non_revoc_intervals(pres_req, pres, credential_definitions)
             await self.check_timestamps(self.ledger, pres_req, pres, rev_reg_defs)
             await self.pre_verify(pres_req, pres)
         except ValueError as err:
@@ -59,6 +63,8 @@ class IndySdkVerifier(IndyVerifier):
             return False
 
         try:
+            print("pres_req:", pres_req)
+            print("pres:", pres)
             verified = await indy.anoncreds.verifier_verify_proof(
                 json.dumps(pres_req),
                 json.dumps(pres),

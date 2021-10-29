@@ -276,6 +276,7 @@ class AriesAgent(DemoAgent):
             state,
             ", presentation_exchange_id =",
             presentation_exchange_id,
+            presentation_request,
         )
 
         if state == "request_received":
