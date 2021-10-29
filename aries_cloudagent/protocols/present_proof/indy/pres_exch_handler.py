@@ -52,7 +52,9 @@ class IndyPresExchHandler:
             )
         elif isinstance(pres_ex_record, V10PresentationExchange):
             proof_request = pres_ex_record._presentation_request.ser
+        print("proof_request:", proof_request)
         non_revoc_intervals = indy_proof_req2non_revoc_intervals(proof_request)
+        print("non_revoc_intervals:", non_revoc_intervals)
         attr_creds = requested_credentials.get("requested_attributes", {})
         req_attrs = proof_request.get("requested_attributes", {})
         for reft in attr_creds:
@@ -75,6 +77,8 @@ class IndyPresExchHandler:
         # remove any timestamps that cannot correspond to non-revoc intervals
         for r in ("requested_attributes", "requested_predicates"):
             for reft, req_item in requested_credentials.get(r, {}).items():
+                print(">>> reft, req_iem:", reft, req_item)
+                print("credentials[req_item['cred_id']]", credentials[req_item["cred_id"]])
                 if not credentials[req_item["cred_id"]].get(
                     "rev_reg_id"
                 ) and req_item.pop("timestamp", None):
@@ -82,6 +86,12 @@ class IndyPresExchHandler:
                         f"Removed superfluous timestamp from requested_credentials {r} "
                         f"{reft} for non-revocable credential {req_item['cred_id']}"
                     )
+                elif req_item.pop("timestamp", None):
+                    print(
+                        f"Removed timestamp from requested_credentials {r} "
+                        f"{reft} for REVOCABLE credential {req_item['cred_id']}"
+                    )
+                print("<<< req_iem:", req_item)
         # Get all schemas, credential definitions, and revocation registries in use
         ledger = self._profile.inject(BaseLedger)
         schemas = {}
@@ -89,6 +99,7 @@ class IndyPresExchHandler:
         revocation_registries = {}
         async with ledger:
             for credential in credentials.values():
+                print("credential:", credential)
                 schema_id = credential["schema_id"]
                 if schema_id not in schemas:
                     schemas[schema_id] = await ledger.get_schema(schema_id)
@@ -167,6 +178,28 @@ class IndyPresExchHandler:
                     f"Failed to create revocation state: {e.error_code}, {e.message}"
                 )
                 raise e
+        # don't include any timestamps
+        #for (referent, precis) in requested_referents.items():
+        #    if "timestamp" not in precis:
+        #        continue
+        #    if referent in requested_credentials["requested_attributes"]:
+        #        requested_credentials["requested_attributes"][referent][
+        #            "timestamp"
+        #        ] = precis["timestamp"]
+        #    if referent in requested_credentials["requested_predicates"]:
+        #        requested_credentials["requested_predicates"][referent][
+        #            "timestamp"
+        #        ] = precis["timestamp"]
+        indy_proof_json = await holder.create_presentation(
+            proof_request,
+            requested_credentials,
+            schemas,
+            cred_defs,
+            revocation_states,
+        )
+        print("indy_proof_json:", indy_proof_json)
+        indy_proof = json.loads(indy_proof_json)
+        # try a version with timestamps
         for (referent, precis) in requested_referents.items():
             if "timestamp" not in precis:
                 continue
@@ -185,7 +218,7 @@ class IndyPresExchHandler:
             cred_defs,
             revocation_states,
         )
-        indy_proof = json.loads(indy_proof_json)
+        print("indy_proof_json:", indy_proof_json)
         return indy_proof
 
     async def process_pres_identifiers(
