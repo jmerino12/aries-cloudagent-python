@@ -34,7 +34,11 @@ class V20CredExRecord(BaseExchangeRecord):
     RECORD_TYPE = "cred_ex_v20"
     RECORD_ID_NAME = "cred_ex_id"
     RECORD_TOPIC = "issue_credential_v2_0"
-    TAG_NAMES = {"~thread_id"} if UNENCRYPTED_TAGS else {"thread_id"}
+    TAG_NAMES = {
+        "~thread_id" if UNENCRYPTED_TAGS else "thread_id",
+        "revoc_reg_id",
+        "revocation_id",
+    }
 
     INITIATOR_SELF = "self"
     INITIATOR_EXTERNAL = "external"
@@ -74,6 +78,8 @@ class V20CredExRecord(BaseExchangeRecord):
         cred_id_stored: str = None,  # backward compat: BaseRecord.from_storage()
         conn_id: str = None,  # backward compat: BaseRecord.from_storage()
         by_format: Mapping = None,  # backward compat: BaseRecord.from_storage()
+        revoc_reg_id: str = None,  # ignore
+        revocation_id: str = None,  # ignore
         **kwargs,
     ):
         """Initialize a new V20CredExRecord."""
@@ -108,6 +114,22 @@ class V20CredExRecord(BaseExchangeRecord):
     def cred_proposal(self) -> V20CredProposal:
         """Accessor; get deserialized view."""
         return None if self._cred_proposal is None else self._cred_proposal.de
+
+    @property
+    def revoc_reg_id(self) -> str:
+        """Accessor; get revoc_reg_id if available."""
+        cred_issue_data = None if self._cred_issue is None else self._cred_issue.de
+        print("cred_issue_data:", cred_issue_data)
+        # TODO need to decode cred_issue_data to see if it contains revoc_reg_id
+        return None if cred_issue_data is None else "tester_revoc_reg_id"
+
+    @property
+    def revocation_id(self) -> str:
+        """Accessor; get revocation_id if available."""
+        cred_issue_data = None if self._cred_issue is None else self._cred_issue.de
+        print("cred_issue_data:", cred_issue_data)
+        # TODO need to decode cred_issue_data to see if it contains revocation_id
+        return None if cred_issue_data is None else "tester_revocation_id"
 
     @cred_proposal.setter
     def cred_proposal(self, value):
