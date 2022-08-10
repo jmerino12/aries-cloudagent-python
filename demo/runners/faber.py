@@ -571,6 +571,7 @@ async def main(args):
                                 exchange_tracing,
                             )
                         )
+                        log_status("offer ${proof_request_web_request}")
 
                     elif faber_agent.cred_type == CRED_FORMAT_JSON_LD:
                         proof_request_web_request = (
@@ -581,12 +582,14 @@ async def main(args):
                                 exchange_tracing,
                             )
                         )
+                        log_status("offer ${proof_request_web_request}")
 
                     else:
                         raise Exception(
                             "Error invalid credential type:" + faber_agent.cred_type
                         )
-
+                    log_status("offer ${proof_request_web_request}")
+                    
                     await agent.admin_POST(
                         "/present-proof-2.0/send-request", proof_request_web_request
                     )
