@@ -509,6 +509,7 @@ async def main(args):
                     offer_request = faber_agent.agent.generate_credential_offer(
                         faber_agent.aip, None, faber_agent.cred_def_id, exchange_tracing
                     )
+                    print(offer_request)
                     await faber_agent.agent.admin_POST(
                         "/issue-credential/send-offer", offer_request
                     )
