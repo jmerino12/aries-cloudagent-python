@@ -509,7 +509,7 @@ async def main(args):
                     offer_request = faber_agent.agent.generate_credential_offer(
                         faber_agent.aip, None, faber_agent.cred_def_id, exchange_tracing
                     )
-                    log_msg("offer ${offer_request}")
+                    log_status(f"offer: {offer_request}")
                     await faber_agent.agent.admin_POST(
                         "/issue-credential/send-offer", offer_request
                     )
@@ -535,6 +535,7 @@ async def main(args):
                         raise Exception(
                             f"Error invalid credential type: {faber_agent.cred_type}"
                         )
+                    log_status(f"offer: {offer_request}")
 
                     await faber_agent.agent.admin_POST(
                         "/issue-credential-2.0/send-offer", offer_request
